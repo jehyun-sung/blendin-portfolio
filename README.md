@@ -49,6 +49,45 @@ The interface uses TypeScript, React Native and Expo Router, including the web b
 
 This repository contains the product presentation and media. Application source, credentials, collection configuration and unpublished technical documents remain in the private development repository.
 
+### System structure
+
+```mermaid
+flowchart LR
+    A[Official data and platform APIs] --> B[Scheduled collectors]
+    B --> C[Validation and source records]
+    C --> D[(PostgreSQL)]
+    D --> E[Read API]
+    E --> F[Public response cache]
+    F --> G[Expo web app]
+    E --> G
+    G --> H[Saved items on the device]
+```
+
+Collection runs separately from browsing. The server keeps provider credentials and prepares data for the read API. Selected public responses pass through an edge cache. Saved places, preferences and day plans are kept on the user's device.
+
+### Application layout
+
+The private development project is split by responsibility:
+
+```text
+mobile/src/app/          Screens and navigation
+mobile/src/components/   Shared interface components
+mobile/src/lib/          API requests, local state and display helpers
+functions/v1/            Public read cache
+supabase/functions/      Data API and collection jobs
+supabase/migrations/     Database changes
+server/test/             Data handling and API checks
+supabase/test/           Database and Edge API checks
+```
+
+### Basic flows
+
+**Regional discovery.** A selected area becomes part of the data request. The screen shows a loading state, then renders the available places, news or events. A failed request has an error state; an empty result is shown as empty. Observed counts describe the collected sample.
+
+**Event to day plan.** An event supplies the starting context: its title, date and venue. The user opens a plan, chooses an option, edits times or places, and saves it on the device or copies it as text. Missing place information stays unconfirmed until the user checks it.
+
+**Collection to display.** Configured collectors request provider data, validate fields and retain source identifiers so repeat collection can be handled without treating each response as a new item. The API serves the stored results for the selected area. Provider access and collection failures affect what can be shown.
+
 ## Current scope
 
 BLENDIN is a working web app under active development. Data availability varies by area and provider, and observed post counts are a sample rather than a complete measure of local activity. Some event names and source text remain in Korean. Day plans are editable drafts; opening hours and actual travel times still need checking.
